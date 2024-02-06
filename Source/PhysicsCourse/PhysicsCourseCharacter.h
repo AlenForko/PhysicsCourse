@@ -40,6 +40,15 @@ class APhysicsCourseCharacter : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* GrappleAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GrapplingHook, meta=(AllowPrivateAccess = "true"))
+	class UCableComponent* CableComponent;
+
+	UPROPERTY(EditAnywhere, Category = GrapplingHook, meta=(AllowPrivateAccess = "true"))
+	float GrapplingLineDistance = 1000.f;
 	
 public:
 	APhysicsCourseCharacter();
@@ -47,6 +56,7 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	virtual void Tick(float DeltaSeconds) override;
 public:
 		
 	/** Look Input Action */
@@ -72,7 +82,9 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-protected:
+	void Grapple();
+	void EndGrapple();
+	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
@@ -82,6 +94,12 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+private:
+
+	float CableDistance;
+	bool isGrappling = false;
+	FVector GrabPoint;
 
 };
 

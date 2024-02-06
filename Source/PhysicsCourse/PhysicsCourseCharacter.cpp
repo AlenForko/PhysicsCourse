@@ -1,8 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PhysicsCourseCharacter.h"
-#include "PhysicsCourseProjectile.h"
-#include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -10,6 +8,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "CableComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -39,6 +40,10 @@ APhysicsCourseCharacter::APhysicsCourseCharacter()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	//Create a cable component and disable the visibility at start
+	CableComponent = CreateDefaultSubobject<UCableComponent>("GrapplingCable");
+	CableComponent->SetupAttachment(FirstPersonCameraComponent);
+	CableComponent->SetVisibility(false);
 }
 
 void APhysicsCourseCharacter::BeginPlay()
@@ -57,6 +62,17 @@ void APhysicsCourseCharacter::BeginPlay()
 
 }
 
+void APhysicsCourseCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if(isGrappling)
+	{
+		CableComponent->EndLocation = GetActorTransform().InverseTransformPosition(GrabPoint);
+		GetCharacterMovement()->AddForce((GrabPoint - GetActorLocation()).GetSafeNormal() * 100000.f);
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////// Input
 
 void APhysicsCourseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -73,6 +89,10 @@ void APhysicsCourseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APhysicsCourseCharacter::Look);
+
+		//Grapple
+		EnhancedInputComponent->BindAction(GrappleAction, ETriggerEvent::Triggered, this, &APhysicsCourseCharacter::Grapple);
+		EnhancedInputComponent->BindAction(GrappleAction, ETriggerEvent::Completed, this, &APhysicsCourseCharacter::EndGrapple);
 	}
 	else
 	{
@@ -104,6 +124,36 @@ void APhysicsCourseCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void APhysicsCourseCharacter::Grapple()
+{
+	FVector Start = GetCapsuleComponent()->GetComponentLocation();
+	FVector End = Start + GrapplingLineDistance * UKismetMathLibrary::GetForwardVector(GetFirstPersonCameraComponent()->GetComponentRotation());
+
+	FHitResult HitResult;
+
+	bool HasHit = GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel2, FCollisionShape::MakeSphere(100.f));
+
+	if(HasHit)
+	{
+		isGrappling = true;
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		GrabPoint = HitResult.ImpactPoint;
+		CableComponent->SetVisibility(true);
+
+		CableDistance = End.Length();
+	}
+}
+
+void APhysicsCourseCharacter::EndGrapple()
+{
+	isGrappling = false;
+	if(!GetCharacterMovement()->IsFalling())
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+		CableComponent->SetVisibility(false);
 	}
 }
 
