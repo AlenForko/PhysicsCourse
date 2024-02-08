@@ -7,13 +7,13 @@
 #include "Logging/LogMacros.h"
 #include "PhysicsCourseCharacter.generated.h"
 
+class UGrapplingHook;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
-
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
@@ -28,7 +28,7 @@ class APhysicsCourseCharacter : public ACharacter
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
-
+	
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
@@ -44,12 +44,6 @@ class APhysicsCourseCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* GrappleAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GrapplingHook, meta=(AllowPrivateAccess = "true"))
-	class UCableComponent* CableComponent;
-
-	UPROPERTY(EditAnywhere, Category = GrapplingHook, meta=(AllowPrivateAccess = "true"))
-	float GrapplingLineDistance = 1000.f;
-	
 public:
 	APhysicsCourseCharacter();
 
@@ -89,17 +83,14 @@ protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
 
+	UPROPERTY(EditAnywhere)
+	UGrapplingHook* GrapplingHook;
+
 public:
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-private:
-
-	float CableDistance;
-	bool isGrappling = false;
-	FVector GrabPoint;
-
+	
 };
 

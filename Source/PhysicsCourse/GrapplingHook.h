@@ -3,20 +3,40 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CableComponent.h"
 #include "GameFramework/Actor.h"
 #include "GrapplingHook.generated.h"
 
-UCLASS()
-class PHYSICSCOURSE_API AGrapplingHook : public AActor
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class PHYSICSCOURSE_API UGrapplingHook : public USceneComponent
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AGrapplingHook();
+	UGrapplingHook();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GrapplingHook, meta=(AllowPrivateAccess = "true"))
+	UCableComponent* CableComponent;
+	
+	UPROPERTY(EditAnywhere, Category = GrapplingHook, meta=(AllowPrivateAccess = "true"))
+	float GrapplingLineDistance = 1000.f;
+	
+	void Grapple(FVector Start, FVector End);
+
+	void EndGrapple();
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+private:
+	float CableDistance;
 	
+	bool bIsGrappling = false;
+	
+	FVector GrabPoint;
+
+	UPROPERTY()
+	ACharacter* OwnerCharacter;
 };

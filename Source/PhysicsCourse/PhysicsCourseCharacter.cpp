@@ -8,9 +8,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "GrapplingHook.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "CableComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -39,18 +38,24 @@ APhysicsCourseCharacter::APhysicsCourseCharacter()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-
-	//Create a cable component and disable the visibility at start
-	CableComponent = CreateDefaultSubobject<UCableComponent>("GrapplingCable");
-	CableComponent->SetupAttachment(FirstPersonCameraComponent);
-	CableComponent->SetVisibility(false);
+	
 }
 
 void APhysicsCourseCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+	
+	GrapplingHook = GetComponentByClass<UGrapplingHook>();
 
+	if(GrapplingHook)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Grappling hook comp found"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Grappling hook comp not found in begin"));
+	}
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -65,12 +70,7 @@ void APhysicsCourseCharacter::BeginPlay()
 void APhysicsCourseCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	if(isGrappling)
-	{
-		CableComponent->EndLocation = GetActorTransform().InverseTransformPosition(GrabPoint);
-		GetCharacterMovement()->AddForce((GrabPoint - GetActorLocation()).GetSafeNormal() * 100000.f);
-	}
+	
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -127,35 +127,31 @@ void APhysicsCourseCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+///////////////////////////////////////
+
 void APhysicsCourseCharacter::Grapple()
 {
 	FVector Start = GetCapsuleComponent()->GetComponentLocation();
-	FVector End = Start + GrapplingLineDistance * UKismetMathLibrary::GetForwardVector(GetFirstPersonCameraComponent()->GetComponentRotation());
-
-	FHitResult HitResult;
-
-	bool HasHit = GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel2, FCollisionShape::MakeSphere(100.f));
-
-	if(HasHit)
+	FVector End = Start + 1400 * UKismetMathLibrary::GetForwardVector(GetFirstPersonCameraComponent()->GetComponentRotation());
+	
+	if (GrapplingHook)
 	{
-		isGrappling = true;
-		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		GrabPoint = HitResult.ImpactPoint;
-		CableComponent->SetVisibility(true);
-
-		CableDistance = End.Length();
+		GrapplingHook->Grapple(Start, End);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Grappling hook comp not found"));
 	}
 }
 
 void APhysicsCourseCharacter::EndGrapple()
 {
-	isGrappling = false;
-	if(!GetCharacterMovement()->IsFalling())
+	if (GrapplingHook)
 	{
-		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-		CableComponent->SetVisibility(false);
+		GrapplingHook->EndGrapple();
 	}
 }
+///////////////////////////////////////
 
 void APhysicsCourseCharacter::SetHasRifle(bool bNewHasRifle)
 {
