@@ -70,7 +70,6 @@ void APhysicsCourseCharacter::BeginPlay()
 void APhysicsCourseCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
