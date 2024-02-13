@@ -70,6 +70,7 @@ void APhysicsCourseCharacter::BeginPlay()
 void APhysicsCourseCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	GrapplingHook->ApplySwingForce();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -99,7 +100,6 @@ void APhysicsCourseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 	}
 }
 
-
 void APhysicsCourseCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -126,12 +126,12 @@ void APhysicsCourseCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-///////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 
 void APhysicsCourseCharacter::Grapple()
 {
 	FVector Start = GetCapsuleComponent()->GetComponentLocation();
-	FVector End = Start + 1400 * UKismetMathLibrary::GetForwardVector(GetFirstPersonCameraComponent()->GetComponentRotation());
+	FVector End = Start + GrapplingDistance * UKismetMathLibrary::GetForwardVector(GetFirstPersonCameraComponent()->GetComponentRotation());
 	
 	if (GrapplingHook)
 	{
@@ -150,7 +150,7 @@ void APhysicsCourseCharacter::EndGrapple()
 		GrapplingHook->EndGrapple();
 	}
 }
-///////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 
 void APhysicsCourseCharacter::SetHasRifle(bool bNewHasRifle)
 {

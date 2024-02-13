@@ -5,7 +5,8 @@
 
 UGrapplingHook::UGrapplingHook()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
+	
 	CableComponent = CreateDefaultSubobject<UCableComponent>("Cable Component");
 	CableComponent->SetVisibility(false);
 }
@@ -30,13 +31,11 @@ void UGrapplingHook::Grapple(FVector Start, FVector End)
 		bIsGrappling = true;
 		GrabPoint = HitResult.ImpactPoint;
 		CableComponent->SetVisibility(true);
-		NewCableLength = (GrabPoint - GetComponentLocation()).Size();
-		CableComponent->CableLength = NewCableLength;
 	}
-	ApplySwingForce();
+	// Convert the GrabPoint from local to world space
 	CableComponent->EndLocation = OwnerCharacter->GetActorTransform().InverseTransformPosition(GrabPoint);
-	CableComponent->CableLength = NewCableLength;
 }
+
 
 void UGrapplingHook::EndGrapple()
 {
@@ -44,7 +43,6 @@ void UGrapplingHook::EndGrapple()
 	{
 		bIsGrappling = false;
 		CableComponent->SetVisibility(false);
-		
 	}
 }
 
@@ -55,12 +53,13 @@ void UGrapplingHook::ApplySwingForce()
 	FVector Velocity = OwnerCharacter->GetVelocity();
 	FVector CharacterLocation = OwnerCharacter->GetActorLocation();
 
-	FVector Length = CharacterLocation - CableComponent->EndLocation;
+	FVector Dir = CharacterLocation - GrabPoint;
 
-	float DotProduct = FVector::DotProduct(Velocity, Length);
-
-	FVector Force = (Length.GetSafeNormal() * DotProduct) * -2.f;
-
+	float DotProduct = FVector::DotProduct(Velocity, Dir);
+	
+	FVector Force = (Dir.GetSafeNormal() * DotProduct) * -2.f;
+	
 	OwnerCharacter->GetCharacterMovement()->AddForce(Force);
-	OwnerCharacter->GetCharacterMovement()->AirControl = 10.f;
+	OwnerCharacter->GetCharacterMovement()->AirControl = 2.f;
+	
 }

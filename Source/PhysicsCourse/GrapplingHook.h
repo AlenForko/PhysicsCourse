@@ -19,17 +19,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GrapplingHook, meta=(AllowPrivateAccess = "true"))
 	UCableComponent* CableComponent;
 	
-	UPROPERTY(EditAnywhere, Category = GrapplingHook, meta=(AllowPrivateAccess = "true"))
-	float GrapplingLineDistance = 1000.f;
-	
 	void Grapple(FVector Start, FVector End);
 
 	void EndGrapple();
-	
+
+	void ApplySwingForce();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	void ApplySwingForce();
 
 private:
 	float NewCableLength;

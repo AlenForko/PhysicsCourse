@@ -86,6 +86,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UGrapplingHook* GrapplingHook;
 
+	UPROPERTY(EditAnywhere)
+	int GrapplingDistance = 1400;
+	
 public:
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
