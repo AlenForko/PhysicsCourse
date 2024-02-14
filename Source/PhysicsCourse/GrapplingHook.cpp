@@ -1,5 +1,6 @@
 #include "GrapplingHook.h"
 #include "CableComponent.h"
+#include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -26,7 +27,7 @@ void UGrapplingHook::Grapple(FVector Start, FVector End)
 	FHitResult HitResult;
 	bool bHasHit = GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel2, FCollisionShape::MakeSphere(10.f));
 
-	if(bHasHit && !bIsGrappling)
+	if(bHasHit && !bIsGrappling && OwnerCharacter->GetActorLocation().Z < HitResult.GetActor()->GetActorLocation().Z)
 	{
 		bIsGrappling = true;
 		GrabPoint = HitResult.ImpactPoint;
@@ -47,19 +48,35 @@ void UGrapplingHook::EndGrapple()
 }
 
 void UGrapplingHook::ApplySwingForce()
-{
+{	
 	if(!bIsGrappling) return;
 	
 	FVector Velocity = OwnerCharacter->GetVelocity();
 	FVector CharacterLocation = OwnerCharacter->GetActorLocation();
-
+	
+	FVector ClampedVelocity = Velocity.GetClampedToSize(VelocityClampMin, VelocityClampMax);
+	
 	FVector Dir = CharacterLocation - GrabPoint;
+	
+	float DotProduct = FVector::DotProduct(ClampedVelocity, Dir);
 
-	float DotProduct = FVector::DotProduct(Velocity, Dir);
+	Dir.Normalize(0.0001);
 	
-	FVector Force = (Dir.GetSafeNormal() * DotProduct) * -2.f;
-	
-	OwnerCharacter->GetCharacterMovement()->AddForce(Force);
+	FVector Force = Dir * DotProduct * -2.f;
+
+	OwnerCharacter->GetCharacterMovement()->AddForce(Force + ForwardForce());
 	OwnerCharacter->GetCharacterMovement()->AirControl = 2.f;
+}
+
+FVector UGrapplingHook::ForwardForce() const
+{
+	FVector CameraForwardVector = OwnerCharacter->GetActorForwardVector();
+
+	FVector Forward = FVector(CameraForwardVector.X, CameraForwardVector.Y, 0);
+	Forward.Normalize(0.0001);
+
+	// Tweak the number based on how much force to add in the forward direction.
+	FVector ForwardForce = Forward * 200000;
 	
+	return ForwardForce;
 }

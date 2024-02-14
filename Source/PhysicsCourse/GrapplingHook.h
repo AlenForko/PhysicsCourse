@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "GrapplingHook.generated.h"
 
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PHYSICSCOURSE_API UGrapplingHook : public USceneComponent
 {
@@ -24,6 +25,8 @@ public:
 	void EndGrapple();
 
 	void ApplySwingForce();
+
+	FVector ForwardForce() const;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -37,4 +40,7 @@ private:
 
 	UPROPERTY()
 	ACharacter* OwnerCharacter;
+	
+	float VelocityClampMin = 400;
+	float VelocityClampMax = 2000;
 };
