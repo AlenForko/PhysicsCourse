@@ -1,5 +1,12 @@
 # PhysicsCourse
 
+## Controls
+
+- WASD - Movement
+- Right Mouse Click (Hold) - Swing
+- R - Restart Level
+- ESC - Quit
+
 ## How it Started
 
 ### Implementing a Grappling Hook
@@ -8,7 +15,7 @@ The project began with the goal of implementing a grappling hook mechanic. While
 
 As seen in the GIF below, the movement is clunky.
 
-// Add GIF of grappling 
+![First grapple](https://github.com/AlenForko/PhysicsCourse/blob/main/GIFS/Grapple.gif)
 
 ### Utilizing the UCableComponent
 
@@ -22,7 +29,7 @@ To streamline the implementation and maintain clean code architecture, I created
 
 As development progressed, I experimented with expanding the grappling hook mechanic into a swinging mechanic. This transition involved significant adjustments to the physics and mechanics underlying the grappling hook implementation. Ultimately, I decided to pivot towards a swinging mechanic, abandoning the traditional grappling hook approach. This decision led to a more fluid and dynamic gameplay experience, aligning better with the course.
 
-// ADD GIF of swinging
+![Swing](https://github.com/AlenForko/PhysicsCourse/blob/main/GIFS/Swing.gif)
 
 # Explanation of Swinging Mechanic Code
 
@@ -38,7 +45,7 @@ To understand how the swinging mechanic works, let's break down the relevant par
 >- It sets the GrabPoint to the impact point of the hit result and makes the cable component visible to simulate the grappling action.
 >- Finally, it converts the GrabPoint from local space to world space and updates the end location of the cable component accordingly.
 <details>
-<summary>Click to reveal code</summary>
+<summary>CLICK TO REVEAL CODE -----></summary>
 
 ```c++
 // Explanation of what this function does and how it's used
@@ -73,8 +80,10 @@ void UGrapplingHook::Grapple(FVector Start, FVector End)
 >- It checks if the grappling hook is currently engaged (bIsGrappling is true).
 >- If the grappling hook is engaged, it sets bIsGrappling to false to indicate that the grappling action has ended.
 >- It also hides the cable component by setting its visibility to false, indicating that the grappling hook is no longer active.
+
 <details>
-<summary>Click to reveal code</summary>
+<summary>CLICK TO REVEAL CODE -----></summary>
+
 
 ```c++
 void UGrapplingHook::EndGrapple()
@@ -106,7 +115,8 @@ void UGrapplingHook::EndGrapple()
 >- Air control is adjusted to improve swinging control.
 
 <details>
-<summary>Click to reveal code</summary>
+<summary>CLICK TO REVEAL CODE -----></summary>
+
 
 ```c++
 void UGrapplingHook::ApplySwingForce()
@@ -158,7 +168,8 @@ void UGrapplingHook::ApplySwingForce()
 >- The calculated forward force is returned for use in the swinging mechanic.
 
 <details>
-<summary>Click to reveal code</summary>
+<summary>CLICK TO REVEAL CODE -----></summary>
+
 
 ```c++
 FVector UGrapplingHook::ForwardForce() const
@@ -185,4 +196,6 @@ FVector UGrapplingHook::ForwardForce() const
 
 With what I have done, I feel very happy with how the swing turned out. Of course there is always room for improvement and detailing, and I plan on improving this mechanic further and hopefully have it ready to be added into another game project.
 
-// Add gameplay GIF
+Here is the finished mechanic... for now!
+
+![LastSwing](https://github.com/AlenForko/PhysicsCourse/blob/main/GIFS/EndSwing.gif)
