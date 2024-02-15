@@ -29,17 +29,22 @@ void UGrapplingHook::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 void UGrapplingHook::Grapple(FVector Start, FVector End)
 {
+	// Check if the owner character exists
 	if (!OwnerCharacter) return;
-	
+
+	// Initialize variables
 	FHitResult HitResult;
 	bool bHasHit = GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel2, FCollisionShape::MakeSphere(10.f));
 
+	// Check if a hit occurred and if the grappling hook is not already engaged, and if the player is below the hit object
 	if(bHasHit && !bIsGrappling && OwnerCharacter->GetActorLocation().Z < HitResult.GetActor()->GetActorLocation().Z)
 	{
+		// Engage the grappling hook
 		bIsGrappling = true;
 		GrabPoint = HitResult.ImpactPoint;
 		CableComponent->SetVisibility(true);
 	}
+	
 	// Convert the GrabPoint from local to world space
 	CableComponent->EndLocation = OwnerCharacter->GetActorTransform().InverseTransformPosition(GrabPoint);
 }
@@ -47,15 +52,19 @@ void UGrapplingHook::Grapple(FVector Start, FVector End)
 
 void UGrapplingHook::EndGrapple()
 {
+	// Check if the grappling hook is engaged
 	if(bIsGrappling)
 	{
+		// Disengage the grappling hook
 		bIsGrappling = false;
+		// Hide the cable component
 		CableComponent->SetVisibility(false);
 	}
 }
 
 void UGrapplingHook::ApplySwingForce()
 {	
+	// Check if the grappling hook is engaged
 	if(!bIsGrappling) return;
 
 	// Get out of the swing if above the grab point
@@ -64,32 +73,45 @@ void UGrapplingHook::ApplySwingForce()
 		EndGrapple();
 	}
 	
+	// Get player's velocity and location
 	FVector Velocity = OwnerCharacter->GetVelocity();
 	FVector CharacterLocation = OwnerCharacter->GetActorLocation();
 	
+	// Clamp the velocity to a specified range
 	FVector ClampedVelocity = Velocity.GetClampedToSize(VelocityClampMin, VelocityClampMax);
 	
+	// Calculate the direction from the player to the grab point
 	FVector Dir = CharacterLocation - GrabPoint;
 	
+	// Calculate the dot product of the clamped velocity and the direction vector
 	float DotProduct = FVector::DotProduct(ClampedVelocity, Dir);
 
+	// Normalize the direction vector
 	Dir.Normalize(0.0001);
 	
+	// Calculate the force to apply for swinging
 	FVector Force = Dir * DotProduct * -2.f;
 
+	// Apply the calculated force to the player character's movement
 	OwnerCharacter->GetCharacterMovement()->AddForce(Force + ForwardForce());
+
+	// Adjust air control to improve swinging control
 	OwnerCharacter->GetCharacterMovement()->AirControl = 2.f;
 }
 
 FVector UGrapplingHook::ForwardForce() const
 {
-	FVector CameraForwardVector = OwnerCharacter->GetActorForwardVector();
+	// Get player forward vector
+	FVector PlayerForwardVector = OwnerCharacter->GetActorForwardVector();
 
-	FVector Forward = FVector(CameraForwardVector.X, CameraForwardVector.Y, 0);
+	// Extract the forward component from the camera forward vector
+	FVector Forward = FVector(PlayerForwardVector.X, PlayerForwardVector.Y, 0);
+	
+	// Normalize the forward vector
 	Forward.Normalize(0.0001);
 
-	// Tweak the number based on how much force to add in the forward direction.
-	FVector ForwardForce = Forward * 200000;
+	// Calculate the forward force to apply 
+	FVector ForwardForce = Forward * ForceMultiplier;
 	
 	return ForwardForce;
 }

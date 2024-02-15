@@ -27,6 +27,9 @@ public:
 	void ApplySwingForce();
 
 	FVector ForwardForce() const;
+
+	UPROPERTY(EditAnywhere)
+	float ForceMultiplier = 200000;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
