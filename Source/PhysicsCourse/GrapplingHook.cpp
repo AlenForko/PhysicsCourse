@@ -6,7 +6,7 @@
 
 UGrapplingHook::UGrapplingHook()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 	
 	CableComponent = CreateDefaultSubobject<UCableComponent>("Cable Component");
 	CableComponent->SetVisibility(false);
@@ -18,6 +18,13 @@ void UGrapplingHook::BeginPlay()
 
 	//Get the owner class.
 	OwnerCharacter = Cast<ACharacter>(GetOwner());
+}
+
+void UGrapplingHook::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	ApplySwingForce();
 }
 
 void UGrapplingHook::Grapple(FVector Start, FVector End)
@@ -50,6 +57,12 @@ void UGrapplingHook::EndGrapple()
 void UGrapplingHook::ApplySwingForce()
 {	
 	if(!bIsGrappling) return;
+
+	// Get out of the swing if above the grab point
+	if (bIsGrappling && OwnerCharacter->GetActorLocation().Z >= GrabPoint.Z)
+	{
+		EndGrapple();
+	}
 	
 	FVector Velocity = OwnerCharacter->GetVelocity();
 	FVector CharacterLocation = OwnerCharacter->GetActorLocation();
